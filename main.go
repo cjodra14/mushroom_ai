@@ -505,7 +505,7 @@ func split(df *dataframe.DataFrame, trainRatio float64, target string) (datafram
 
 	}
 
-	xTrain := dataframe.NewDataFrame(xTestSeries...)
+	xTrain := dataframe.NewDataFrame(xTrainSeries...)
 	xTest := dataframe.NewDataFrame(xTestSeries...)
 	yTrain := dataframe.NewDataFrame(yTrainSeries...)
 	yTest := dataframe.NewDataFrame(yTestSeries...)
