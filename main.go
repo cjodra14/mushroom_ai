@@ -169,7 +169,9 @@ func main() {
 	fmt.Printf("Dataframe Columns: %v\n", df.Names())
 
 	// Iterate over the columns
-	for i, colName := range df.Names() {
+	columns := df.Names()
+	colsToDelete := []string{}
+	for i, colName := range columns {
 		if colName == "class" {
 			continue
 		}
@@ -207,9 +209,7 @@ func main() {
 
 			}
 
-			if err := df.RemoveSeries(colName); err != nil {
-				log.Fatal(err)
-			}
+			colsToDelete = append(colsToDelete, colName)
 
 			continue
 		}
@@ -224,7 +224,11 @@ func main() {
 			log.Fatal(err)
 		}
 
-		if err := df.RemoveSeries(colName); err != nil {
+		colsToDelete = append(colsToDelete, colName)
+	}
+
+	for _, col := range colsToDelete {
+		if err := df.RemoveSeries(col); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -265,12 +269,37 @@ func main() {
 	fmt.Println(df.Table(dataframe.TableOptions{R: &dataframe.Range{Start: &startRow, End: &endRow}}))
 
 	corrMatrix := createCorrelationMatrix(df)
-	fmt.Println(corrMatrix)
+	// fmt.Println(corrMatrix)
 	saveCorrelationMatrixHeatmap(corrMatrix, "correlation_heatmap.png")
 
-	classIndex := len(df.Names())-1 // Replace this with the index of the 'class' column in your data.
-	correlated := searchCorrelatedVariables(corrMatrix, df.Names(), classIndex)
-	fmt.Println("Correlated variables:", correlated)
+	/*
+		// Correlated variables TODO  (research using gonum/mat)
+		classIndex := len(df.Names())-1 // Replace this with the index of the 'class' column in your data.
+		correlated := searchCorrelatedVariables(corrMatrix, df.Names(), classIndex)
+		fmt.Println("Correlated variables:", correlated)
+	*/
+	colsToPreserve := map[string]bool{"class_normalized": true, "odor_f": true, "odor_n": true, "gill-spacing_c": true, "gill-spacing_w": true, "gill-size_b": true, "gill-size_n": true, "stalk-root_?": true, "stalk-surface-above-ring_k": true, "stalk-surface-above-ring_s": true, "stalk-surface-below-ring_k": true, "stalk-surface-below-ring_s": true, "spore-print-color_h": true, "spore-print-color_k": true, "spore-print-color_n": true, "spore-print-color_w": true, "population_v": true, "habitat_p": true}
+
+	columnsBeforeDelete := df.Names()
+	for _, column := range columnsBeforeDelete {
+		_, ok := colsToPreserve[column]
+
+		if !ok {
+			if err := df.RemoveSeries(column); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+
+	fmt.Println(df.Table(dataframe.TableOptions{R: &dataframe.Range{Start: &startRow, End: &endRow}}))
+
+	xTrain, yTrain, xTest, yTest := split(df, 0.8, "class_normalized")
+
+	fmt.Println(xTrain.Table(dataframe.TableOptions{R: &dataframe.Range{Start: &startRow, End: &endRow}}))
+	fmt.Println(yTrain.Table(dataframe.TableOptions{R: &dataframe.Range{Start: &startRow, End: &endRow}}))
+	fmt.Println(xTest.Table(dataframe.TableOptions{R: &dataframe.Range{Start: &startRow, End: &endRow}}))
+	fmt.Println(yTest.Table(dataframe.TableOptions{R: &dataframe.Range{Start: &startRow, End: &endRow}}))
+
 }
 
 func isPossibleHabitat(habitat string) bool {
@@ -435,4 +464,51 @@ func searchCorrelatedVariables(corrMatrix [][]float64, names []string, classInde
 	}
 
 	return correlated
+}
+
+// split splits DataFrame into two parts: train and test, according to the provided ratio
+func split(df *dataframe.DataFrame, trainRatio float64, target string) (dataframe.DataFrame, dataframe.DataFrame, dataframe.DataFrame, dataframe.DataFrame) {
+	xTrainSeries := []dataframe.Series{}
+	yTrainSeries := []dataframe.Series{}
+	xTestSeries := []dataframe.Series{}
+	yTestSeries := []dataframe.Series{}
+
+	for i, column := range df.Names() {
+		series := df.Series[i]
+		trainSerie := dataframe.NewSeriesInt64(column, nil)
+		testSerie := dataframe.NewSeriesInt64(column, nil)
+
+		for i := 0; i < series.NRows(); i++ {
+			rowValue := series.Value(i).(int64)
+
+			rowRatio := float64((float64(i) + 1.0) / float64(series.NRows()))
+
+			if rowRatio < trainRatio {
+				trainSerie.Append(rowValue)
+			} else {
+				testSerie.Append(rowValue)
+			}
+
+		}
+
+		if column == target {
+
+			yTrainSeries = append(yTrainSeries, trainSerie)
+			yTestSeries = append(yTestSeries, testSerie)
+
+			continue
+
+		}
+
+		xTrainSeries = append(xTrainSeries, trainSerie)
+		xTestSeries = append(xTestSeries, testSerie)
+
+	}
+
+	xTrain := dataframe.NewDataFrame(xTestSeries...)
+	xTest := dataframe.NewDataFrame(xTestSeries...)
+	yTrain := dataframe.NewDataFrame(yTrainSeries...)
+	yTest := dataframe.NewDataFrame(yTestSeries...)
+
+	return *xTrain, *xTest, *yTrain, *yTest
 }
