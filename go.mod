@@ -3,8 +3,8 @@ module mushrooms_ai
 go 1.20
 
 require (
+	github.com/patrikeh/go-deep v0.0.0-20230427173908-a2775168ab3d
 	github.com/rocketlaunchr/dataframe-go v0.0.0-20211025052708-a1030444159b
-	github.com/sirupsen/logrus v1.6.0
 	github.com/wcharczuk/go-chart/v2 v2.1.0
 	gonum.org/v1/gonum v0.7.0
 	gonum.org/v1/plot v0.0.0-20190515093506-e2840ee46a6b
@@ -25,7 +25,6 @@ require (
 	github.com/juju/utils/v2 v2.0.0-20200923005554-4646bfea2ef1 // indirect
 	github.com/jung-kurt/gofpdf v1.0.3-0.20190309125859-24315acbbda5 // indirect
 	github.com/klauspost/compress v1.9.7 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/mattn/go-runewidth v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
 	github.com/rocketlaunchr/mysql-go v1.1.3 // indirect
@@ -35,6 +34,5 @@ require (
 	golang.org/x/image v0.0.0-20210216034530-4410531fe030 // indirect
 	golang.org/x/net v0.0.0-20210423184538-5f58ad60dda6 // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
-	golang.org/x/sys v0.0.0-20210423082822-04245dca01da // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

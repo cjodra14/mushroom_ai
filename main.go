@@ -18,6 +18,8 @@ import (
 	"gonum.org/v1/plot/vg"
 
 	"gonum.org/v1/gonum/mat"
+
+	deep "github.com/patrikeh/go-deep"
 )
 
 type GridXYZ struct {
@@ -511,4 +513,25 @@ func split(df *dataframe.DataFrame, trainRatio float64, target string) (datafram
 	yTest := dataframe.NewDataFrame(yTestSeries...)
 
 	return *xTrain, *xTest, *yTrain, *yTest
+}
+
+func newNeuralNetwork(inputDimension int, layer []int, activation deep.ActivationType, mode deep.Mode) *deep.Neural {
+	return deep.NewNeural(&deep.Config{
+		/* Input dimensionality */
+		Inputs: inputDimension,
+		/* Two hidden layers consisting of two neurons each, and a single output */
+		Layout: layer, //[]int{2, 2, 1},
+		/* Activation functions: Sigmoid, Tanh, ReLU, Linear */
+		Activation: activation,
+		/* Determines output layer activation & loss function:
+		ModeRegression: linear outputs with MSE loss
+		ModeMultiClass: softmax output with Cross Entropy loss
+		ModeMultiLabel: sigmoid output with Cross Entropy loss
+		ModeBinary: sigmoid output with binary CE loss */
+		Mode: mode,
+		/* Weight initializers: {deep.NewNormal(μ, σ), deep.NewUniform(μ, σ)} */
+		Weight: deep.NewNormal(1.0, 0.0),
+		/* Apply bias */
+		Bias: true,
+	})
 }
